@@ -1,29 +1,18 @@
--- Enhanced 99 Nights Script with Voidware-style GUI
--- Auto-loading chunks, invincibility, and AFK protection
-
+-- Enhanced Voidware Loader with Auto-Features
 repeat task.wait() until game:IsLoaded()
 
+-- Auto-enable features for 99 Nights
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local RootPart = Character:WaitForChild("HumanoidRootPart")
 
--- Notification function
-local function notify(title, text, duration)
-    StarterGui:SetCore("SendNotification", {
-        Title = title,
-        Text = text,
-        Duration = duration or 3
-    })
-end
-
--- Variables
+-- Auto-enable variables
 local isInvincible = false
 local isAFKEnabled = false
 local isChunkLoadingEnabled = false
@@ -38,40 +27,34 @@ local chunkSize = 2000
 local CHUNK_UPDATE_INTERVAL = 2
 local AFK_UPDATE_INTERVAL = 5
 
--- Invincibility System
-local function toggleInvincibility()
-    isInvincible = not isInvincible
-    if isInvincible then
-        Humanoid.MaxHealth = math.huge
-        Humanoid.Health = math.huge
-        Humanoid.WalkSpeed = 50
-        Humanoid.JumpPower = 100
-        
-        local forceField = Instance.new("ForceField")
-        forceField.Parent = Character
-        
-        -- Health protection
-        local healthConnection = RunService.Heartbeat:Connect(function()
-            if isInvincible and Humanoid and Humanoid.Health < Humanoid.MaxHealth then
-                Humanoid.Health = Humanoid.MaxHealth
-            end
-        end)
-        
-        notify("Invincibility", "God mode activated!", 3)
-    else
-        Humanoid.MaxHealth = originalHealth
-        Humanoid.Health = originalHealth
-        Humanoid.WalkSpeed = 16
-        Humanoid.JumpPower = 50
-        
-        for _, child in pairs(Character:GetChildren()) do
-            if child:IsA("ForceField") then
-                child:Destroy()
-            end
+-- Auto-enable invincibility
+local function enableAutoInvincibility()
+    isInvincible = true
+    Humanoid.MaxHealth = math.huge
+    Humanoid.Health = math.huge
+    Humanoid.WalkSpeed = 50
+    Humanoid.JumpPower = 100
+    
+    local forceField = Instance.new("ForceField")
+    forceField.Parent = Character
+    
+    -- Health protection
+    local healthConnection = RunService.Heartbeat:Connect(function()
+        if isInvincible and Humanoid and Humanoid.Health < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
         end
-        
-        notify("Invincibility", "God mode deactivated!", 3)
-    end
+    end)
+end
+
+-- Auto-enable AFK protection
+local function enableAutoAFK()
+    isAFKEnabled = true
+    originalPosition = RootPart.Position
+end
+
+-- Auto-enable chunk loading
+local function enableAutoChunkLoading()
+    isChunkLoadingEnabled = true
 end
 
 -- AFK Protection System
@@ -98,16 +81,6 @@ local function simulateMovement()
         
         task.wait(0.1)
         RootPart.CFrame = CFrame.new(originalPosition)
-    end
-end
-
-local function toggleAFK()
-    isAFKEnabled = not isAFKEnabled
-    if isAFKEnabled then
-        originalPosition = RootPart.Position
-        notify("AFK Protection", "AFK protection enabled!", 3)
-    else
-        notify("AFK Protection", "AFK protection disabled!", 3)
     end
 end
 
@@ -155,19 +128,6 @@ local function loadChunksAround(position, radius)
     end
 end
 
-local function toggleChunkLoading()
-    isChunkLoadingEnabled = not isChunkLoadingEnabled
-    if isChunkLoadingEnabled then
-        notify("Chunk Loading", "Chunk loading enabled!", 3)
-    else
-        for _, connection in pairs(chunkConnections) do
-            connection:Disconnect()
-        end
-        chunkConnections = {}
-        notify("Chunk Loading", "Chunk loading disabled!", 3)
-    end
-end
-
 -- Main update loop
 local function mainLoop()
     local currentTime = tick()
@@ -190,25 +150,85 @@ end
 -- Start main loop
 local mainConnection = RunService.Heartbeat:Connect(mainLoop)
 
--- Auto-enable features (chunk loading and AFK, but not invincibility)
+-- Auto-enable all features
 task.wait(1)
--- Auto-enable chunk loading
-isChunkLoadingEnabled = true
-notify("Chunk Loading", "Chunk loading auto-enabled!", 3)
+enableAutoInvincibility()
+enableAutoAFK()
+enableAutoChunkLoading()
 
--- Auto-enable AFK protection
-isAFKEnabled = true
-originalPosition = RootPart.Position
-notify("AFK Protection", "AFK protection auto-enabled!", 3)
-
--- Don't auto-enable invincibility - let user toggle it
-notify("99 Nights Enhanced", "Chunk loading and AFK auto-enabled! Toggle invincibility as needed.", 5)
-
--- Export functions for easy access
-_G.toggleInvincibility = toggleInvincibility
-_G.toggleAFK = toggleAFK
-_G.toggleChunkLoading = toggleChunkLoading
-
-print("99 Nights Enhanced Script loaded successfully!")
-print("Features: Invincibility, AFK Protection, Chunk Loading")
-print("Commands: _G.toggleInvincibility(), _G.toggleAFK(), _G.toggleChunkLoading()")
+-- Original Voidware Loader
+local meta = {
+    [2619619496] = {
+        title = "Bedwars",
+        dev = "vwdev/vwrw.lua",
+        script = "https://raw.githubusercontent.com/VapeVoidware/VWRewrite/main/NewMainScript.lua"
+    },
+    [7008097940] = {
+       title = "Ink Game",
+       dev = "vwdev/inkgame.lua",
+       script = "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua"
+    },
+    [6331902150] = {
+        title = "Forsaken",
+        dev = "vwdev/forsaken.lua",
+        script = "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/forsaken.lua"
+    },
+    [7326934954] = {
+        title = "99 Nights In The Forest",
+        dev = "vwdev/nightsintheforest.lua",
+        script = "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/nightsintheforest.lua"
+    }
+}
+local data = meta[game.GameId]
+if not data then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Voidware | Loader",
+        Text = "Unsupported game :c",
+        Duration = 15
+    })
+    return
+else
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Voidware | Loader",
+        Text = "Loading for "..tostring(data.title).."...",
+        Duration = 15
+    })
+    local res
+    if shared.VoidDev and data.dev ~= nil and pcall(function() return isfile(data.dev) end) then
+        res = loadstring(readfile(data.dev))
+    else
+        res = loadstring(game:HttpGet(data.script, true))
+    end
+    if type(res) ~= "function" then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Voidware Loading Error",
+            Text = tostring(res),
+            Duration = 15
+        })
+        task.delay(0.5, function()
+            if shared.VoidDev then return end
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Voidware Loading Error",
+                Text = "Please report this issue to erchodev#0 \n or in discord.gg/voidware",
+                Duration = 15
+            })
+        end)
+    else
+        local suc, err = pcall(res)
+        if not suc then
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+                Title = "Voidware Main Error",
+                Text = tostring(err),
+                Duration = 15
+            })
+            task.delay(0.5, function()
+                if shared.VoidDev then return end
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "Voidware Main Error",
+                    Text = "Please report this issue to erchodev#0 \n or in discord.gg/voidware",
+                    Duration = 15
+                })
+            end)
+        end
+    end
+end
