@@ -245,6 +245,9 @@ else
                     Duration = 15
                 })
             end)
+        else
+            -- Successfully loaded Voidware, now execute it
+            print("Voidware loaded successfully!")
         end
     end
 end
