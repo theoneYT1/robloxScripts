@@ -38,12 +38,35 @@ local function enableAutoInvincibility()
     local forceField = Instance.new("ForceField")
     forceField.Parent = Character
     
-    -- Health protection
+    -- Enhanced health protection
     local healthConnection = RunService.Heartbeat:Connect(function()
-        if isInvincible and Humanoid and Humanoid.Health < Humanoid.MaxHealth then
-            Humanoid.Health = Humanoid.MaxHealth
+        if isInvincible and Humanoid then
+            if Humanoid.Health < math.huge then
+                Humanoid.Health = math.huge
+            end
+            if Humanoid.MaxHealth < math.huge then
+                Humanoid.MaxHealth = math.huge
+            end
         end
     end)
+    
+    -- Additional protection against damage
+    local function onHealthChanged()
+        if isInvincible and Humanoid then
+            Humanoid.Health = math.huge
+        end
+    end
+    
+    Humanoid.HealthChanged:Connect(onHealthChanged)
+    
+    -- Force field protection
+    local function onChildAdded(child)
+        if child:IsA("ForceField") then
+            child:Destroy()
+        end
+    end
+    
+    Character.ChildAdded:Connect(onChildAdded)
 end
 
 -- Auto-enable AFK protection
