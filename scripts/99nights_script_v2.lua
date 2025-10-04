@@ -54,25 +54,24 @@ local function enableAutoInvincibility()
         end
     end)
     
-    -- ULTRA AGGRESSIVE health protection - 100 trillion times per second
+    -- Fast but stable health protection - 10,000 times per second
     spawn(function()
         while isInvincible do
             if Humanoid then
                 Humanoid.Health = 999999
                 Humanoid.MaxHealth = 999999
             end
-            wait(0.00000000001) -- Run 100000000000000 times per second
+            wait(0.0001) -- Run 10,000 times per second - fast but stable
         end
     end)
     
-    -- Even more aggressive - no wait time
+    -- Additional fast protection - 5,000 times per second
     spawn(function()
         while isInvincible do
             if Humanoid then
                 Humanoid.Health = 999999
-                Humanoid.MaxHealth = 999999
             end
-            -- No wait time - runs as fast as possible
+            wait(0.0002) -- Run 5,000 times per second
         end
     end)
     
