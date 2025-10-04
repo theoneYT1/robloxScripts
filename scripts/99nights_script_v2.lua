@@ -31,41 +31,69 @@ local AFK_UPDATE_INTERVAL = 5
 local function enableAutoInvincibility()
     isInvincible = true
     
-    -- Aggressive invincibility method
+    -- Method 1: Set health to a very high number (not math.huge)
     spawn(function()
         while isInvincible do
             if Humanoid then
-                Humanoid.MaxHealth = math.huge
-                Humanoid.Health = math.huge
+                Humanoid.MaxHealth = 999999
+                Humanoid.Health = 999999
                 Humanoid.WalkSpeed = 50
                 Humanoid.JumpPower = 100
-                
-                -- Create multiple ForceFields
-                for _, child in pairs(Character:GetChildren()) do
-                    if child:IsA("ForceField") then
-                        child:Destroy()
-                    end
-                end
-                
-                local forceField = Instance.new("ForceField")
-                forceField.Parent = Character
             end
-            wait(0.01) -- Run every 0.01 seconds (100 times per second)
+            wait(0.1)
         end
     end)
     
-    -- Additional protection using Heartbeat
-    local heartbeatConnection = RunService.Heartbeat:Connect(function()
-        if isInvincible and Humanoid then
-            Humanoid.MaxHealth = math.huge
-            Humanoid.Health = math.huge
+    -- Method 2: Use BodyVelocity to prevent damage
+    spawn(function()
+        while isInvincible do
+            if RootPart then
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                bodyVelocity.Parent = RootPart
+                wait(0.1)
+                if bodyVelocity then
+                    bodyVelocity:Destroy()
+                end
+            end
+            wait(0.1)
         end
     end)
     
-    -- HealthChanged protection
-    local healthChangedConnection = Humanoid.HealthChanged:Connect(function()
-        if isInvincible and Humanoid then
-            Humanoid.Health = math.huge
+    -- Method 3: Teleport to safe position when taking damage
+    local lastHealth = 999999
+    spawn(function()
+        while isInvincible do
+            if Humanoid and Humanoid.Health < lastHealth then
+                -- Teleport to safe position
+                local safePosition = RootPart.Position + Vector3.new(0, 10, 0)
+                RootPart.CFrame = CFrame.new(safePosition)
+                Humanoid.Health = 999999
+            end
+            lastHealth = Humanoid.Health
+            wait(0.1)
+        end
+    end)
+    
+    -- Method 4: Create invisible shield parts
+    spawn(function()
+        while isInvincible do
+            if Character then
+                local shield = Instance.new("Part")
+                shield.Name = "InvincibilityShield"
+                shield.Size = Vector3.new(10, 10, 10)
+                shield.Position = RootPart.Position
+                shield.Transparency = 1
+                shield.CanCollide = false
+                shield.Anchored = true
+                shield.Parent = Workspace
+                wait(0.1)
+                if shield then
+                    shield:Destroy()
+                end
+            end
+            wait(0.1)
         end
     end)
     
