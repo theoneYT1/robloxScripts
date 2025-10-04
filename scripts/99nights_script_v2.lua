@@ -59,14 +59,7 @@ local function enableAutoInvincibility()
     
     Humanoid.HealthChanged:Connect(onHealthChanged)
     
-    -- Force field protection
-    local function onChildAdded(child)
-        if child:IsA("ForceField") then
-            child:Destroy()
-        end
-    end
-    
-    Character.ChildAdded:Connect(onChildAdded)
+    -- Keep ForceField active for protection
 end
 
 -- Auto-enable AFK protection
