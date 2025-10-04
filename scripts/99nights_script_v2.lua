@@ -30,36 +30,48 @@ local AFK_UPDATE_INTERVAL = 5
 -- Auto-enable invincibility
 local function enableAutoInvincibility()
     isInvincible = true
+    
+    -- Set health to max immediately
     Humanoid.MaxHealth = math.huge
     Humanoid.Health = math.huge
     Humanoid.WalkSpeed = 50
     Humanoid.JumpPower = 100
     
+    -- Create ForceField for protection
     local forceField = Instance.new("ForceField")
     forceField.Parent = Character
     
-    -- Enhanced health protection
-    local healthConnection = RunService.Heartbeat:Connect(function()
+    -- Multiple protection layers
+    local function protectHealth()
         if isInvincible and Humanoid then
-            if Humanoid.Health < math.huge then
-                Humanoid.Health = math.huge
-            end
-            if Humanoid.MaxHealth < math.huge then
-                Humanoid.MaxHealth = math.huge
-            end
-        end
-    end)
-    
-    -- Additional protection against damage
-    local function onHealthChanged()
-        if isInvincible and Humanoid then
+            Humanoid.MaxHealth = math.huge
             Humanoid.Health = math.huge
         end
     end
     
-    Humanoid.HealthChanged:Connect(onHealthChanged)
+    -- Heartbeat protection (runs every frame)
+    local heartbeatConnection = RunService.Heartbeat:Connect(protectHealth)
     
-    -- Keep ForceField active for protection
+    -- HealthChanged protection (instant response)
+    local healthChangedConnection = Humanoid.HealthChanged:Connect(protectHealth)
+    
+    -- Stepped protection (runs every physics step)
+    local steppedConnection = RunService.Stepped:Connect(protectHealth)
+    
+    -- Additional protection every 0.1 seconds
+    spawn(function()
+        while isInvincible do
+            protectHealth()
+            wait(0.1)
+        end
+    end)
+    
+    -- Notify user
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Invincibility",
+        Text = "God mode activated!",
+        Duration = 3
+    })
 end
 
 -- Auto-enable AFK protection
