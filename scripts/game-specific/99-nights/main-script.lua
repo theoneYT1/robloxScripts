@@ -1,5 +1,5 @@
--- Enhanced Spawning, Teleportation & Invincibility Script
--- Modern GUI system with advanced spawning mechanics
+-- Voidware-Style Enhanced Script
+-- Advanced GUI system with private features and flying
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -13,6 +13,22 @@ local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- Private access system (Voidware style)
+local PRIVATE_USERS = {
+    "theoneYT1", -- Your username for private access
+    "VoidwareUser",
+    "PrivateUser"
+}
+
+local function isPrivateUser()
+    for _, username in pairs(PRIVATE_USERS) do
+        if LocalPlayer.Name == username then
+            return true
+        end
+    end
+    return false
+end
 
 -- Performance settings
 local PERFORMANCE_MODE = true
@@ -107,6 +123,149 @@ function InvincibilityLib.toggleInvincibility()
     end
 end
 
+-- Advanced Flying System (Voidware style)
+local FlyLib = {}
+local flySpeed = 50
+local flyEnabled = false
+local flyConnection = nil
+local flyKeys = {
+    W = false,
+    A = false,
+    S = false,
+    D = false,
+    Space = false,
+    LeftShift = false
+}
+
+function FlyLib.enableFlying()
+    if not isPrivateUser() then
+        notify("Access Denied", "Flying is private feature only!", 3)
+        return
+    end
+    
+    flyEnabled = true
+    
+    -- Create BodyVelocity for smooth flying
+    local bodyVelocity = Instance.new("BodyVelocity")
+    bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+    bodyVelocity.Parent = RootPart
+    
+    -- Create BodyAngularVelocity for rotation
+    local bodyAngularVelocity = Instance.new("BodyAngularVelocity")
+    bodyAngularVelocity.MaxTorque = Vector3.new(4000, 4000, 4000)
+    bodyAngularVelocity.AngularVelocity = Vector3.new(0, 0, 0)
+    bodyAngularVelocity.Parent = RootPart
+    
+    -- Input handling
+    local function onInputBegan(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.KeyCode == Enum.KeyCode.W then
+            flyKeys.W = true
+        elseif input.KeyCode == Enum.KeyCode.A then
+            flyKeys.A = true
+        elseif input.KeyCode == Enum.KeyCode.S then
+            flyKeys.S = true
+        elseif input.KeyCode == Enum.KeyCode.D then
+            flyKeys.D = true
+        elseif input.KeyCode == Enum.KeyCode.Space then
+            flyKeys.Space = true
+        elseif input.KeyCode == Enum.KeyCode.LeftShift then
+            flyKeys.LeftShift = true
+    end
+end
+
+    local function onInputEnded(input, gameProcessed)
+        if gameProcessed then return end
+        
+        if input.KeyCode == Enum.KeyCode.W then
+            flyKeys.W = false
+        elseif input.KeyCode == Enum.KeyCode.A then
+            flyKeys.A = false
+        elseif input.KeyCode == Enum.KeyCode.S then
+            flyKeys.S = false
+        elseif input.KeyCode == Enum.KeyCode.D then
+            flyKeys.D = false
+        elseif input.KeyCode == Enum.KeyCode.Space then
+            flyKeys.Space = false
+        elseif input.KeyCode == Enum.KeyCode.LeftShift then
+            flyKeys.LeftShift = false
+        end
+    end
+    
+    UserInputService.InputBegan:Connect(onInputBegan)
+    UserInputService.InputEnded:Connect(onInputEnded)
+    
+    -- Flying logic
+    flyConnection = RunService.Heartbeat:Connect(function()
+        if not flyEnabled or not RootPart then return end
+        
+        local camera = Workspace.CurrentCamera
+        local moveVector = Vector3.new(0, 0, 0)
+        
+        -- Calculate movement direction
+        if flyKeys.W then
+            moveVector = moveVector + camera.CFrame.LookVector
+        end
+        if flyKeys.S then
+            moveVector = moveVector - camera.CFrame.LookVector
+        end
+        if flyKeys.A then
+            moveVector = moveVector - camera.CFrame.RightVector
+        end
+        if flyKeys.D then
+            moveVector = moveVector + camera.CFrame.RightVector
+        end
+        if flyKeys.Space then
+            moveVector = moveVector + Vector3.new(0, 1, 0)
+        end
+        if flyKeys.LeftShift then
+            moveVector = moveVector - Vector3.new(0, 1, 0)
+        end
+        
+        -- Apply movement
+        if moveVector.Magnitude > 0 then
+            bodyVelocity.Velocity = moveVector.Unit * flySpeed
+        else
+            bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        end
+    end)
+    
+    notify("Flying", "Flying enabled! Use WASD + Space/Shift", 3)
+end
+
+function FlyLib.disableFlying()
+    flyEnabled = false
+    
+    if flyConnection then
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
+    
+    -- Remove flying parts
+    for _, child in pairs(RootPart:GetChildren()) do
+        if child:IsA("BodyVelocity") or child:IsA("BodyAngularVelocity") then
+            child:Destroy()
+    end
+end
+
+    notify("Flying", "Flying disabled!", 3)
+end
+
+function FlyLib.toggleFlying()
+    if flyEnabled then
+        FlyLib.disableFlying()
+    else
+        FlyLib.enableFlying()
+        end
+    end
+    
+function FlyLib.setFlySpeed(speed)
+    flySpeed = speed
+    notify("Flying", "Fly speed set to " .. speed, 2)
+end
+
 -- Enhanced Teleportation System
 local TeleportLib = {}
 
@@ -117,9 +276,9 @@ function TeleportLib.teleportTo(position)
     elseif typeof(position) == "CFrame" then
         RootPart.CFrame = position
         notify("Teleport", "Teleported to CFrame", 2)
+        end
     end
-end
-
+    
 function TeleportLib.teleportToPlayer(playerName)
     local targetPlayer = Players:FindFirstChild(playerName)
     if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -136,9 +295,9 @@ function TeleportLib.teleportToMouse()
     if hit then
         RootPart.CFrame = CFrame.new(hit.Position + Vector3.new(0, 5, 0))
         notify("Teleport", "Teleported to mouse position", 2)
+        end
     end
-end
-
+    
 -- Enhanced Spawning System
 local SpawnLib = {}
 
@@ -157,9 +316,9 @@ function SpawnLib.spawnObject(objectName, position, properties)
             if object[key] then
                 object[key] = value
             end
+        end
     end
-end
-
+    
     object.Parent = Workspace
     notify("Spawn", "Spawned " .. objectName, 2)
     return object
@@ -171,9 +330,9 @@ function SpawnLib.spawnAtMouse(objectName, properties)
         return SpawnLib.spawnObject(objectName, hit.Position + Vector3.new(0, 5, 0), properties)
     else
         return SpawnLib.spawnObject(objectName, RootPart.Position + Vector3.new(0, 10, 0), properties)
+        end
     end
-end
-
+    
 function SpawnLib.spawnVehicle(vehicleType, position)
     local vehicle = Instance.new("Model")
     vehicle.Name = vehicleType .. " Vehicle"
@@ -514,49 +673,67 @@ function AFKLib.toggleAFKProtection()
     end
 end
 
--- Modern GUI System (Voidware Style)
-local function createModernGUI()
+-- Voidware-Style GUI System
+local function createVoidwareGUI()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "ModernSpawnGUI"
+    screenGui.Name = "VoidwareGUI"
     screenGui.Parent = LocalPlayer.PlayerGui
     
-    -- Main Frame
+    -- Main Frame (Voidware style)
     local mainFrame = Instance.new("Frame")
     mainFrame.Name = "MainFrame"
-    mainFrame.Size = UDim2.new(0, 400, 0, 500)
-    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
-    mainFrame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    mainFrame.Size = UDim2.new(0, 450, 0, 600)
+    mainFrame.Position = UDim2.new(0.5, -225, 0.5, -300)
+    mainFrame.BackgroundColor3 = Color3.new(0.05, 0.05, 0.05)
     mainFrame.BorderSizePixel = 0
     mainFrame.Parent = screenGui
     
-    -- Corner rounding
+    -- Voidware-style corner rounding
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
+    corner.CornerRadius = UDim.new(0, 12)
     corner.Parent = mainFrame
     
-    -- Title Bar
+    -- Voidware-style title bar
     local titleBar = Instance.new("Frame")
     titleBar.Name = "TitleBar"
-    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.Size = UDim2.new(1, 0, 0, 50)
     titleBar.Position = UDim2.new(0, 0, 0, 0)
-    titleBar.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    titleBar.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
     titleBar.BorderSizePixel = 0
     titleBar.Parent = mainFrame
     
     local titleCorner = Instance.new("UICorner")
-    titleCorner.CornerRadius = UDim.new(0, 8)
+    titleCorner.CornerRadius = UDim.new(0, 12)
     titleCorner.Parent = titleBar
     
     local title = Instance.new("TextLabel")
     title.Name = "Title"
     title.Size = UDim2.new(1, -40, 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
+    title.Position = UDim2.new(0, 15, 0, 0)
     title.BackgroundTransparency = 1
-    title.Text = "Enhanced Spawn & Teleport System"
-    title.TextColor3 = Color3.new(1, 1, 1)
+    title.Text = "Voidware Enhanced System"
+    title.TextColor3 = Color3.new(0.8, 0.8, 0.8)
     title.TextScaled = true
     title.Font = Enum.Font.GothamBold
     title.Parent = titleBar
+    
+    -- Private access indicator
+    if isPrivateUser() then
+        local privateLabel = Instance.new("TextLabel")
+        privateLabel.Name = "PrivateLabel"
+        privateLabel.Size = UDim2.new(0, 80, 0, 20)
+        privateLabel.Position = UDim2.new(0, 15, 0, 30)
+        privateLabel.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
+        privateLabel.Text = "PRIVATE ACCESS"
+        privateLabel.TextColor3 = Color3.new(1, 1, 1)
+        privateLabel.TextScaled = true
+        privateLabel.Font = Enum.Font.GothamBold
+        privateLabel.Parent = titleBar
+        
+        local privateCorner = Instance.new("UICorner")
+        privateCorner.CornerRadius = UDim.new(0, 4)
+        privateCorner.Parent = privateLabel
+    end
     
     -- Close Button
     local closeBtn = Instance.new("TextButton")
@@ -587,7 +764,7 @@ local function createModernGUI()
     tabFrame.BorderSizePixel = 0
     tabFrame.Parent = mainFrame
     
-    local tabs = {"Teleport", "Spawn", "Gems", "Settings"}
+    local tabs = {"Teleport", "Spawn", "Gems", "Flying", "Settings"}
     local currentTab = "Teleport"
     
     for i, tabName in pairs(tabs) do
@@ -840,6 +1017,52 @@ local function createModernGUI()
                 btn.MouseButton1Click:Connect(btnData.func)
             end
             
+        elseif currentTab == "Flying" then
+            -- Flying Section (Private feature)
+            local flyingSection = Instance.new("Frame")
+            flyingSection.Name = "FlyingSection"
+            flyingSection.Size = UDim2.new(1, 0, 0, 250)
+            flyingSection.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+            flyingSection.BorderSizePixel = 0
+            flyingSection.Parent = contentFrame
+            
+            local flyingCorner = Instance.new("UICorner")
+            flyingCorner.CornerRadius = UDim.new(0, 6)
+            flyingCorner.Parent = flyingSection
+            
+            local flyingLayout = Instance.new("UIListLayout")
+            flyingLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            flyingLayout.Padding = UDim.new(0, 5)
+            flyingLayout.Parent = flyingSection
+            
+            -- Flying Buttons
+            local flyingBtns = {
+                {text = "Toggle Flying (Private)", func = FlyLib.toggleFlying, color = Color3.new(0.8, 0.4, 0.2)},
+                {text = "Set Fly Speed to 50", func = function() FlyLib.setFlySpeed(50) end, color = Color3.new(0.3, 0.3, 0.3)},
+                {text = "Set Fly Speed to 100", func = function() FlyLib.setFlySpeed(100) end, color = Color3.new(0.3, 0.3, 0.3)},
+                {text = "Set Fly Speed to 200", func = function() FlyLib.setFlySpeed(200) end, color = Color3.new(0.3, 0.3, 0.3)},
+                {text = "Disable Flying", func = FlyLib.disableFlying, color = Color3.new(0.8, 0.2, 0.2)}
+            }
+            
+            for i, btnData in pairs(flyingBtns) do
+                local btn = Instance.new("TextButton")
+                btn.Name = "FlyingBtn" .. i
+                btn.Size = UDim2.new(1, -10, 0, 30)
+                btn.Position = UDim2.new(0, 5, 0, 5 + (i-1) * 35)
+                btn.BackgroundColor3 = btnData.color
+                btn.Text = btnData.text
+                btn.TextColor3 = Color3.new(1, 1, 1)
+                btn.TextScaled = true
+                btn.Font = Enum.Font.Gotham
+                btn.Parent = flyingSection
+                
+                local btnCorner = Instance.new("UICorner")
+                btnCorner.CornerRadius = UDim.new(0, 4)
+                btnCorner.Parent = btn
+                
+                btn.MouseButton1Click:Connect(btnData.func)
+            end
+            
         elseif currentTab == "Settings" then
             -- Settings Section
             local settingsSection = Instance.new("Frame")
@@ -906,8 +1129,8 @@ setupInvincibility()
 task.wait(1)
 InvincibilityLib.enableInvincibility()
 
--- Create modern GUI
-local gui = createModernGUI()
+-- Create Voidware-style GUI
+local gui = createVoidwareGUI()
 
 -- Export functions globally for easy access
 _G.TeleportLib = TeleportLib
@@ -916,6 +1139,7 @@ _G.InvincibilityLib = InvincibilityLib
 _G.ChunkLib = ChunkLib
 _G.GemLib = GemLib
 _G.AFKLib = AFKLib
+_G.FlyLib = FlyLib
 
 -- Quick access commands
 _G.teleport = TeleportLib.teleportTo
@@ -938,4 +1162,10 @@ _G.afk = AFKLib.enableAFKProtection
 _G.noafk = AFKLib.disableAFKProtection
 _G.toggleAFK = AFKLib.toggleAFKProtection
 
-notify("Commands Ready", "Use _G.spawnAtMouse(), _G.teleport(), _G.god(), etc. | Modern GUI loaded!", 5)
+-- Flying commands (Private access)
+_G.fly = FlyLib.enableFlying
+_G.nofly = FlyLib.disableFlying
+_G.toggleFly = FlyLib.toggleFlying
+_G.flySpeed = FlyLib.setFlySpeed
+
+notify("Voidware System Ready", "Private access granted! Use _G.fly(), _G.spawnAtMouse(), _G.teleport(), etc. | Voidware GUI loaded!", 5)
