@@ -31,38 +31,41 @@ local AFK_UPDATE_INTERVAL = 5
 local function enableAutoInvincibility()
     isInvincible = true
     
-    -- Set health to max immediately
-    Humanoid.MaxHealth = math.huge
-    Humanoid.Health = math.huge
-    Humanoid.WalkSpeed = 50
-    Humanoid.JumpPower = 100
+    -- Aggressive invincibility method
+    spawn(function()
+        while isInvincible do
+            if Humanoid then
+                Humanoid.MaxHealth = math.huge
+                Humanoid.Health = math.huge
+                Humanoid.WalkSpeed = 50
+                Humanoid.JumpPower = 100
+                
+                -- Create multiple ForceFields
+                for _, child in pairs(Character:GetChildren()) do
+                    if child:IsA("ForceField") then
+                        child:Destroy()
+                    end
+                end
+                
+                local forceField = Instance.new("ForceField")
+                forceField.Parent = Character
+            end
+            wait(0.01) -- Run every 0.01 seconds (100 times per second)
+        end
+    end)
     
-    -- Create ForceField for protection
-    local forceField = Instance.new("ForceField")
-    forceField.Parent = Character
-    
-    -- Multiple protection layers
-    local function protectHealth()
+    -- Additional protection using Heartbeat
+    local heartbeatConnection = RunService.Heartbeat:Connect(function()
         if isInvincible and Humanoid then
             Humanoid.MaxHealth = math.huge
             Humanoid.Health = math.huge
         end
-    end
+    end)
     
-    -- Heartbeat protection (runs every frame)
-    local heartbeatConnection = RunService.Heartbeat:Connect(protectHealth)
-    
-    -- HealthChanged protection (instant response)
-    local healthChangedConnection = Humanoid.HealthChanged:Connect(protectHealth)
-    
-    -- Stepped protection (runs every physics step)
-    local steppedConnection = RunService.Stepped:Connect(protectHealth)
-    
-    -- Additional protection every 0.1 seconds
-    spawn(function()
-        while isInvincible do
-            protectHealth()
-            wait(0.1)
+    -- HealthChanged protection
+    local healthChangedConnection = Humanoid.HealthChanged:Connect(function()
+        if isInvincible and Humanoid then
+            Humanoid.Health = math.huge
         end
     end)
     
