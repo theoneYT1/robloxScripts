@@ -31,7 +31,7 @@ local AFK_UPDATE_INTERVAL = 5
 local function enableAutoInvincibility()
     isInvincible = true
     
-    -- Method 1: Set health to a very high number (not math.huge)
+    -- Method 1: Set health to a very high number (not math.huge) - ULTRA FAST
     spawn(function()
         while isInvincible do
             if Humanoid then
@@ -40,7 +40,17 @@ local function enableAutoInvincibility()
                 Humanoid.WalkSpeed = 50
                 Humanoid.JumpPower = 100
             end
-            wait(0.1)
+            wait(0.01) -- Run 100 times per second instead of 10
+        end
+    end)
+    
+    -- Additional ultra-fast health protection
+    spawn(function()
+        while isInvincible do
+            if Humanoid then
+                Humanoid.Health = 999999
+            end
+            wait(0.001) -- Run 1000 times per second
         end
     end)
     
