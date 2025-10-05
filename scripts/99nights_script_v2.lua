@@ -239,21 +239,21 @@ task.wait(1)
 enableAutoAFK()
 enableAutoChunkLoading()
 
--- Dual Loader System (VapeVoidware + Moondiety)
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "Dual Loader System",
-    Text = "Loading VapeVoidware + Moondiety...",
+-- VapeVoidware Loader Only
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "VapeVoidware Loader",
+    Text = "Loading VapeVoidware...",
     Duration = 5
 })
 
--- Load VapeVoidware first
+-- Load VapeVoidware
 spawn(function()
     local success, error = pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
     end)
     
     if success then
-    game:GetService("StarterGui"):SetCore("SendNotification", {
+        game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "VapeVoidware",
             Text = "VapeVoidware loaded successfully!",
             Duration = 3
@@ -262,29 +262,6 @@ spawn(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "VapeVoidware Error",
             Text = "Failed to load VapeVoidware: " .. tostring(error),
-            Duration = 5
-        })
-    end
-end)
-
--- Load Moondiety second
-spawn(function()
-    task.wait(1) -- Wait 1 second before loading Moondiety
-    
-    local success, error = pcall(function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/m00ndiety/Moondiety/refs/heads/main/Loader'))()
-    end)
-    
-    if success then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Moondiety",
-            Text = "Moondiety loaded successfully!",
-            Duration = 3
-        })
-    else
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Moondiety Error",
-            Text = "Failed to load Moondiety: " .. tostring(error),
             Duration = 5
         })
     end
