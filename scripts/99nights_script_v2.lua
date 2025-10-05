@@ -239,21 +239,21 @@ task.wait(1)
 enableAutoAFK()
 enableAutoChunkLoading()
 
--- VapeVoidware Loader Only
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "VapeVoidware Loader",
-    Text = "Loading VapeVoidware...",
+-- Dual Loader System (VapeVoidware + 99daysloader)
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Dual Loader System",
+    Text = "Loading VapeVoidware + 99daysloader...",
     Duration = 5
 })
 
--- Load VapeVoidware
+-- Load VapeVoidware first
 spawn(function()
     local success, error = pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
     end)
     
     if success then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
+    game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "VapeVoidware",
             Text = "VapeVoidware loaded successfully!",
             Duration = 3
@@ -262,6 +262,29 @@ spawn(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
             Title = "VapeVoidware Error",
             Text = "Failed to load VapeVoidware: " .. tostring(error),
+            Duration = 5
+        })
+    end
+end)
+
+-- Load 99daysloader second
+spawn(function()
+    task.wait(1) -- Wait 1 second before loading 99daysloader
+    
+    local success, error = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/wefwef127382/99daysloader.github.io/refs/heads/main/ringta.lua"))()
+    end)
+    
+    if success then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "99daysloader",
+            Text = "99daysloader loaded successfully!",
+            Duration = 3
+        })
+    else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "99daysloader Error",
+            Text = "Failed to load 99daysloader: " .. tostring(error),
             Duration = 5
         })
     end
