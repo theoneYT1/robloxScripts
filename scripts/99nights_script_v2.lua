@@ -25,99 +25,77 @@ local chunkSize = 2000
 local CHUNK_UPDATE_INTERVAL = 2
 local AFK_UPDATE_INTERVAL = 5
 
--- Auto-invincibility (always enabled)
-local isInvincible = true
+-- Invincibility System (copied from Voidware script)
+local InvincibilityLib = {}
+local isInvincible = false
+local originalHealth = 100
+local protectionConnections = {}
 
--- Auto-invincibility system (always active) - ULTRA EFFECTIVE
-local function enableAutoInvincibility()
-    -- Method 1: Ultra-fast health protection
-    spawn(function()
-        while isInvincible do
-            if Humanoid then
-                Humanoid.MaxHealth = 999999
-                Humanoid.Health = 999999
-            end
-            wait(0.001) -- Run 1000 times per second
+local function setupInvincibility()
+    if not Character or not Humanoid then return end
+    
+    originalHealth = Humanoid.MaxHealth
+    
+    local healthProtectionConnection
+    healthProtectionConnection = RunService.Heartbeat:Connect(function()
+        if isInvincible and Humanoid and Humanoid.Health < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
         end
     end)
+    table.insert(protectionConnections, healthProtectionConnection)
     
-    -- Method 2: Additional ultra-fast protection
-    spawn(function()
-        while isInvincible do
-            if Humanoid then
-                Humanoid.Health = 999999
-                Humanoid.MaxHealth = 999999
-            end
-            wait(0.0001) -- Run 10,000 times per second
+    Humanoid.HealthChanged:Connect(function(health)
+        if isInvincible and health < Humanoid.MaxHealth then
+            Humanoid.Health = Humanoid.MaxHealth
         end
     end)
+end
+
+function InvincibilityLib.enableInvincibility()
+    isInvincible = true
+    if Humanoid then
+        Humanoid.MaxHealth = math.huge
+        Humanoid.Health = math.huge
+        Humanoid.WalkSpeed = 50
+        Humanoid.JumpPower = 100
+    end
     
-    -- Method 3: Health change protection with immediate reset
-    spawn(function()
-        while isInvincible do
-            if Humanoid then
-                Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-                    Humanoid.Health = 999999
-                    Humanoid.MaxHealth = 999999
-                end)
-            end
-            wait(0.01)
-        end
-    end)
+    local forceField = Instance.new("ForceField")
+    forceField.Parent = Character
     
-    -- Method 4: Teleport protection when taking damage
-    spawn(function()
-        local lastHealth = 999999
-        while isInvincible do
-            if Humanoid and Humanoid.Health < lastHealth then
-                local safePosition = RootPart.Position + Vector3.new(0, 50, 0)
-                RootPart.CFrame = CFrame.new(safePosition)
-                Humanoid.Health = 999999
-                Humanoid.MaxHealth = 999999
-            end
-            lastHealth = Humanoid.Health
-            wait(0.01)
-        end
-    end)
-    
-    -- Method 5: BodyVelocity protection
-    spawn(function()
-        while isInvincible do
-            if RootPart then
-                local bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                bodyVelocity.Parent = RootPart
-                wait(0.1)
-                if bodyVelocity then
-                    bodyVelocity:Destroy()
-                end
-            end
-            wait(0.1)
-        end
-    end)
-    
-    -- Handle respawning
-    LocalPlayer.CharacterAdded:Connect(function(character)
-        local newHumanoid = character:WaitForChild("Humanoid")
-        local newRootPart = character:WaitForChild("HumanoidRootPart")
-        spawn(function()
-            while isInvincible do
-                if newHumanoid then
-                    newHumanoid.MaxHealth = 999999
-                    newHumanoid.Health = 999999
-                end
-                wait(0.001)
-            end
-        end)
-    end)
-    
-    -- Notify user
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Invincibility",
-        Text = "ULTRA God mode activated!",
+        Text = "God mode activated!",
         Duration = 3
     })
+end
+
+function InvincibilityLib.disableInvincibility()
+    isInvincible = false
+    if Humanoid then
+        Humanoid.MaxHealth = originalHealth
+        Humanoid.Health = originalHealth
+    end
+    
+    for _, child in pairs(Character:GetChildren()) do
+        if child:IsA("ForceField") then
+            child:Destroy()
+        end
+    end
+    
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Invincibility",
+        Text = "God mode deactivated!",
+        Duration = 3
+    })
+end
+
+function InvincibilityLib.toggleInvincibility()
+    if isInvincible then
+        InvincibilityLib.disableInvincibility()
+    else
+        InvincibilityLib.enableInvincibility()
+    end
 end
 
 -- Auto-enable AFK protection
@@ -224,9 +202,11 @@ end
 -- Start main loop
 local mainConnection = RunService.Heartbeat:Connect(mainLoop)
 
+-- Setup invincibility system
+setupInvincibility()
+
 -- Auto-enable all features
 task.wait(1)
-enableAutoInvincibility()
 enableAutoAFK()
 enableAutoChunkLoading()
 
@@ -309,3 +289,270 @@ else
         end
     end
 end
+
+-- Enhanced GUI System with Invincibility Tab
+local function createEnhancedGUI()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "EnhancedVoidwareGUI"
+    screenGui.Parent = LocalPlayer.PlayerGui
+    
+    -- Main Frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 400, 0, 500)
+    mainFrame.Position = UDim2.new(0.5, -200, 0.5, -250)
+    mainFrame.BackgroundColor3 = Color3.new(0.05, 0.05, 0.05)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+    
+    -- Corner rounding
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = mainFrame
+    
+    -- Title Bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 50)
+    titleBar.Position = UDim2.new(0, 0, 0, 0)
+    titleBar.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
+    
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 12)
+    titleCorner.Parent = titleBar
+    
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Size = UDim2.new(1, -40, 1, 0)
+    title.Position = UDim2.new(0, 15, 0, 0)
+    title.BackgroundTransparency = 1
+    title.Text = "Enhanced Voidware System"
+    title.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+    title.TextScaled = true
+    title.Font = Enum.Font.GothamBold
+    title.Parent = titleBar
+    
+    -- Close Button
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name = "CloseBtn"
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0, 5)
+    closeBtn.BackgroundColor3 = Color3.new(0.8, 0.2, 0.2)
+    closeBtn.Text = "X"
+    closeBtn.TextColor3 = Color3.new(1, 1, 1)
+    closeBtn.TextScaled = true
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.Parent = titleBar
+    
+    local closeCorner = Instance.new("UICorner")
+    closeCorner.CornerRadius = UDim.new(0, 4)
+    closeCorner.Parent = closeBtn
+    
+    closeBtn.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
+    end)
+    
+    -- Tab System
+    local tabFrame = Instance.new("Frame")
+    tabFrame.Name = "TabFrame"
+    tabFrame.Size = UDim2.new(1, 0, 0, 40)
+    tabFrame.Position = UDim2.new(0, 0, 0, 40)
+    tabFrame.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
+    tabFrame.BorderSizePixel = 0
+    tabFrame.Parent = mainFrame
+    
+    local tabs = {"Invincibility", "AFK", "Chunks", "Settings"}
+    local currentTab = "Invincibility"
+    
+    for i, tabName in pairs(tabs) do
+        local tabBtn = Instance.new("TextButton")
+        tabBtn.Name = tabName .. "Tab"
+        tabBtn.Size = UDim2.new(1/#tabs, 0, 1, 0)
+        tabBtn.Position = UDim2.new((i-1)/#tabs, 0, 0, 0)
+        tabBtn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+        tabBtn.Text = tabName
+        tabBtn.TextColor3 = Color3.new(1, 1, 1)
+        tabBtn.TextScaled = true
+        tabBtn.Font = Enum.Font.Gotham
+        tabBtn.Parent = tabFrame
+        
+        tabBtn.MouseButton1Click:Connect(function()
+            currentTab = tabName
+            updateTabContent()
+        end)
+    end
+    
+    -- Content Frame
+    local contentFrame = Instance.new("ScrollingFrame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, -10, 1, -90)
+    contentFrame.Position = UDim2.new(0, 5, 0, 85)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.BorderSizePixel = 0
+    contentFrame.ScrollBarThickness = 6
+    contentFrame.Parent = mainFrame
+    
+    local contentLayout = Instance.new("UIListLayout")
+    contentLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    contentLayout.Padding = UDim.new(0, 5)
+    contentLayout.Parent = contentFrame
+    
+    -- Update tab content function
+    function updateTabContent()
+        -- Clear existing content
+        for _, child in pairs(contentFrame:GetChildren()) do
+            if child:IsA("Frame") then
+                child:Destroy()
+            end
+        end
+        
+        if currentTab == "Invincibility" then
+            -- Invincibility Tab
+            local invincibilitySection = Instance.new("Frame")
+            invincibilitySection.Name = "InvincibilitySection"
+            invincibilitySection.Size = UDim2.new(1, -10, 0, 200)
+            invincibilitySection.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+            invincibilitySection.Parent = contentFrame
+            
+            local invincibilityCorner = Instance.new("UICorner")
+            invincibilityCorner.CornerRadius = UDim.new(0, 8)
+            invincibilityCorner.Parent = invincibilitySection
+            
+            local invincibilityTitle = Instance.new("TextLabel")
+            invincibilityTitle.Name = "InvincibilityTitle"
+            invincibilityTitle.Size = UDim2.new(1, 0, 0, 30)
+            invincibilityTitle.Position = UDim2.new(0, 0, 0, 0)
+            invincibilityTitle.BackgroundTransparency = 1
+            invincibilityTitle.Text = "Invincibility Controls"
+            invincibilityTitle.TextColor3 = Color3.new(1, 1, 1)
+            invincibilityTitle.TextScaled = true
+            invincibilityTitle.Font = Enum.Font.GothamBold
+            invincibilityTitle.Parent = invincibilitySection
+            
+            -- Toggle Button
+            local toggleBtn = Instance.new("TextButton")
+            toggleBtn.Name = "ToggleBtn"
+            toggleBtn.Size = UDim2.new(1, -20, 0, 40)
+            toggleBtn.Position = UDim2.new(0, 10, 0, 40)
+            toggleBtn.BackgroundColor3 = isInvincible and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
+            toggleBtn.Text = isInvincible and "Disable Invincibility" or "Enable Invincibility"
+            toggleBtn.TextColor3 = Color3.new(1, 1, 1)
+            toggleBtn.TextScaled = true
+            toggleBtn.Font = Enum.Font.Gotham
+            toggleBtn.Parent = invincibilitySection
+            
+            local toggleCorner = Instance.new("UICorner")
+            toggleCorner.CornerRadius = UDim.new(0, 6)
+            toggleCorner.Parent = toggleBtn
+            
+            toggleBtn.MouseButton1Click:Connect(function()
+                InvincibilityLib.toggleInvincibility()
+                toggleBtn.BackgroundColor3 = isInvincible and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
+                toggleBtn.Text = isInvincible and "Disable Invincibility" or "Enable Invincibility"
+            end)
+            
+            -- Status Label
+            local statusLabel = Instance.new("TextLabel")
+            statusLabel.Name = "StatusLabel"
+            statusLabel.Size = UDim2.new(1, -20, 0, 30)
+            statusLabel.Position = UDim2.new(0, 10, 0, 90)
+            statusLabel.BackgroundTransparency = 1
+            statusLabel.Text = "Status: " .. (isInvincible and "ENABLED" or "DISABLED")
+            statusLabel.TextColor3 = isInvincible and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
+            statusLabel.TextScaled = true
+            statusLabel.Font = Enum.Font.Gotham
+            statusLabel.Parent = invincibilitySection
+            
+        elseif currentTab == "AFK" then
+            -- AFK Tab
+            local afkSection = Instance.new("Frame")
+            afkSection.Name = "AFKSection"
+            afkSection.Size = UDim2.new(1, -10, 0, 150)
+            afkSection.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+            afkSection.Parent = contentFrame
+            
+            local afkCorner = Instance.new("UICorner")
+            afkCorner.CornerRadius = UDim.new(0, 8)
+            afkCorner.Parent = afkSection
+            
+            local afkTitle = Instance.new("TextLabel")
+            afkTitle.Name = "AFKTitle"
+            afkTitle.Size = UDim2.new(1, 0, 0, 30)
+            afkTitle.Position = UDim2.new(0, 0, 0, 0)
+            afkTitle.BackgroundTransparency = 1
+            afkTitle.Text = "AFK Protection: " .. (isAFKEnabled and "ENABLED" or "DISABLED")
+            afkTitle.TextColor3 = isAFKEnabled and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
+            afkTitle.TextScaled = true
+            afkTitle.Font = Enum.Font.GothamBold
+            afkTitle.Parent = afkSection
+            
+        elseif currentTab == "Chunks" then
+            -- Chunks Tab
+            local chunksSection = Instance.new("Frame")
+            chunksSection.Name = "ChunksSection"
+            chunksSection.Size = UDim2.new(1, -10, 0, 150)
+            chunksSection.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+            chunksSection.Parent = contentFrame
+            
+            local chunksCorner = Instance.new("UICorner")
+            chunksCorner.CornerRadius = UDim.new(0, 8)
+            chunksCorner.Parent = chunksSection
+            
+            local chunksTitle = Instance.new("TextLabel")
+            chunksTitle.Name = "ChunksTitle"
+            chunksTitle.Size = UDim2.new(1, 0, 0, 30)
+            chunksTitle.Position = UDim2.new(0, 0, 0, 0)
+            chunksTitle.BackgroundTransparency = 1
+            chunksTitle.Text = "Chunk Loading: " .. (isChunkLoadingEnabled and "ENABLED" or "DISABLED")
+            chunksTitle.TextColor3 = isChunkLoadingEnabled and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
+            chunksTitle.TextScaled = true
+            chunksTitle.Font = Enum.Font.GothamBold
+            chunksTitle.Parent = chunksSection
+            
+        elseif currentTab == "Settings" then
+            -- Settings Tab
+            local settingsSection = Instance.new("Frame")
+            settingsSection.Name = "SettingsSection"
+            settingsSection.Size = UDim2.new(1, -10, 0, 200)
+            settingsSection.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+            settingsSection.Parent = contentFrame
+            
+            local settingsCorner = Instance.new("UICorner")
+            settingsCorner.CornerRadius = UDim.new(0, 8)
+            settingsCorner.Parent = settingsSection
+            
+            local settingsTitle = Instance.new("TextLabel")
+            settingsTitle.Name = "SettingsTitle"
+            settingsTitle.Size = UDim2.new(1, 0, 0, 30)
+            settingsTitle.Position = UDim2.new(0, 0, 0, 0)
+            settingsTitle.BackgroundTransparency = 1
+            settingsTitle.Text = "Script Settings"
+            settingsTitle.TextColor3 = Color3.new(1, 1, 1)
+            settingsTitle.TextScaled = true
+            settingsTitle.Font = Enum.Font.GothamBold
+            settingsTitle.Parent = settingsSection
+            
+            local infoLabel = Instance.new("TextLabel")
+            infoLabel.Name = "InfoLabel"
+            infoLabel.Size = UDim2.new(1, -20, 0, 100)
+            infoLabel.Position = UDim2.new(0, 10, 0, 40)
+            infoLabel.BackgroundTransparency = 1
+            infoLabel.Text = "Enhanced Voidware System\n\nFeatures:\n• Invincibility Toggle\n• AFK Protection\n• Chunk Loading\n• Auto-Enabled Features"
+            infoLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+            infoLabel.TextScaled = true
+            infoLabel.Font = Enum.Font.Gotham
+            infoLabel.Parent = settingsSection
+        end
+    end
+    
+    -- Initialize with first tab
+    updateTabContent()
+    
+    return screenGui
+end
+
+-- Create the enhanced GUI
+task.wait(2)
+local gui = createEnhancedGUI()
