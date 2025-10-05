@@ -28,28 +28,70 @@ local AFK_UPDATE_INTERVAL = 5
 -- Auto-invincibility (always enabled)
 local isInvincible = true
 
--- Auto-invincibility system (always active) - Standard loader approach
+-- Auto-invincibility system (always active) - ULTRA EFFECTIVE
 local function enableAutoInvincibility()
-    -- Standard invincibility method used in most loaders
+    -- Method 1: Ultra-fast health protection
     spawn(function()
         while isInvincible do
             if Humanoid then
-                Humanoid.MaxHealth = math.huge
-                Humanoid.Health = math.huge
+                Humanoid.MaxHealth = 999999
+                Humanoid.Health = 999999
             end
-            wait()
+            wait(0.001) -- Run 1000 times per second
         end
     end)
     
-    -- Health change protection
+    -- Method 2: Additional ultra-fast protection
+    spawn(function()
+        while isInvincible do
+            if Humanoid then
+                Humanoid.Health = 999999
+                Humanoid.MaxHealth = 999999
+            end
+            wait(0.0001) -- Run 10,000 times per second
+        end
+    end)
+    
+    -- Method 3: Health change protection with immediate reset
     spawn(function()
         while isInvincible do
             if Humanoid then
                 Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-                    if Humanoid.Health < Humanoid.MaxHealth then
-                        Humanoid.Health = Humanoid.MaxHealth
-                    end
+                    Humanoid.Health = 999999
+                    Humanoid.MaxHealth = 999999
                 end)
+            end
+            wait(0.01)
+        end
+    end)
+    
+    -- Method 4: Teleport protection when taking damage
+    spawn(function()
+        local lastHealth = 999999
+        while isInvincible do
+            if Humanoid and Humanoid.Health < lastHealth then
+                local safePosition = RootPart.Position + Vector3.new(0, 50, 0)
+                RootPart.CFrame = CFrame.new(safePosition)
+                Humanoid.Health = 999999
+                Humanoid.MaxHealth = 999999
+            end
+            lastHealth = Humanoid.Health
+            wait(0.01)
+        end
+    end)
+    
+    -- Method 5: BodyVelocity protection
+    spawn(function()
+        while isInvincible do
+            if RootPart then
+                local bodyVelocity = Instance.new("BodyVelocity")
+                bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                bodyVelocity.Parent = RootPart
+                wait(0.1)
+                if bodyVelocity then
+                    bodyVelocity:Destroy()
+                end
             end
             wait(0.1)
         end
@@ -58,13 +100,14 @@ local function enableAutoInvincibility()
     -- Handle respawning
     LocalPlayer.CharacterAdded:Connect(function(character)
         local newHumanoid = character:WaitForChild("Humanoid")
+        local newRootPart = character:WaitForChild("HumanoidRootPart")
         spawn(function()
             while isInvincible do
                 if newHumanoid then
-                    newHumanoid.MaxHealth = math.huge
-                    newHumanoid.Health = math.huge
+                    newHumanoid.MaxHealth = 999999
+                    newHumanoid.Health = 999999
                 end
-                wait()
+                wait(0.001)
             end
         end)
     end)
@@ -72,7 +115,7 @@ local function enableAutoInvincibility()
     -- Notify user
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Invincibility",
-        Text = "God mode auto-activated!",
+        Text = "ULTRA God mode activated!",
         Duration = 3
     })
 end
