@@ -1,8 +1,8 @@
--- Dual Loader System (VapeVoidware + 99daysloader ONLY)
+-- Dual Loader System (VapeVoidware + FlashHub 99Nights ONLY)
 repeat task.wait() until game:IsLoaded()
 
 -- Load VapeVoidware
 loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
 
--- Load 99daysloader
-loadstring(game:HttpGet("https://raw.githubusercontent.com/wefwef127382/99daysloader.github.io/refs/heads/main/ringta.lua"))()
+-- Load FlashHub 99Nights
+loadstring(game:HttpGet("https://raw.githubusercontent.com/scripture2025/FlashHub/refs/heads/main/99Nights"))()
