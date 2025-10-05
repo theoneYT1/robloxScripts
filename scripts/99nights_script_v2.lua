@@ -25,34 +25,41 @@ local chunkSize = 2000
 local CHUNK_UPDATE_INTERVAL = 2
 local AFK_UPDATE_INTERVAL = 5
 
--- Invincibility System (copied from Voidware script)
+-- Invincibility System (ULTRA EFFECTIVE - Fixed)
 local InvincibilityLib = {}
 local isInvincible = false
 local originalHealth = 100
 local protectionConnections = {}
+local forceField = nil
 
 local function setupInvincibility()
     if not Character or not Humanoid then return end
     
     originalHealth = Humanoid.MaxHealth
     
+    -- Ultra-fast health protection
     local healthProtectionConnection
     healthProtectionConnection = RunService.Heartbeat:Connect(function()
-        if isInvincible and Humanoid and Humanoid.Health < Humanoid.MaxHealth then
-            Humanoid.Health = Humanoid.MaxHealth
+        if isInvincible and Humanoid then
+            Humanoid.MaxHealth = math.huge
+            Humanoid.Health = math.huge
         end
     end)
     table.insert(protectionConnections, healthProtectionConnection)
     
+    -- Additional health protection
     Humanoid.HealthChanged:Connect(function(health)
-        if isInvincible and health < Humanoid.MaxHealth then
-            Humanoid.Health = Humanoid.MaxHealth
+        if isInvincible and Humanoid then
+            Humanoid.Health = math.huge
+            Humanoid.MaxHealth = math.huge
         end
     end)
 end
 
 function InvincibilityLib.enableInvincibility()
     isInvincible = true
+    
+    -- Method 1: Set health to infinite
     if Humanoid then
         Humanoid.MaxHealth = math.huge
         Humanoid.Health = math.huge
@@ -60,23 +67,45 @@ function InvincibilityLib.enableInvincibility()
         Humanoid.JumpPower = 100
     end
     
-    local forceField = Instance.new("ForceField")
-    forceField.Parent = Character
+    -- Method 2: Create ForceField
+    if Character then
+        forceField = Instance.new("ForceField")
+        forceField.Parent = Character
+    end
+    
+    -- Method 3: Ultra-fast protection loop
+    spawn(function()
+        while isInvincible do
+            if Humanoid then
+                Humanoid.Health = math.huge
+                Humanoid.MaxHealth = math.huge
+            end
+            wait(0.01)
+        end
+    end)
     
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Invincibility",
-        Text = "God mode activated!",
+        Text = "ULTRA God mode activated!",
         Duration = 3
     })
 end
 
 function InvincibilityLib.disableInvincibility()
     isInvincible = false
+    
     if Humanoid then
         Humanoid.MaxHealth = originalHealth
         Humanoid.Health = originalHealth
     end
     
+    -- Remove ForceField
+    if forceField then
+        forceField:Destroy()
+        forceField = nil
+    end
+    
+    -- Remove all ForceFields
     for _, child in pairs(Character:GetChildren()) do
         if child:IsA("ForceField") then
             child:Destroy()
@@ -449,8 +478,12 @@ local function createEnhancedGUI()
             
             toggleBtn.MouseButton1Click:Connect(function()
                 InvincibilityLib.toggleInvincibility()
+                -- Update button appearance
                 toggleBtn.BackgroundColor3 = isInvincible and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
                 toggleBtn.Text = isInvincible and "Disable Invincibility" or "Enable Invincibility"
+                -- Update status label
+                statusLabel.Text = "Status: " .. (isInvincible and "ENABLED" or "DISABLED")
+                statusLabel.TextColor3 = isInvincible and Color3.new(0.2, 0.8, 0.2) or Color3.new(0.8, 0.2, 0.2)
             end)
             
             -- Status Label
