@@ -36,30 +36,21 @@ local function enableAutoChunkLoading()
     isChunkLoadingEnabled = true
 end
 
--- AFK Protection System
+-- AFK Protection System (Fixed - No more random teleporting)
 local function simulateMovement()
     if not isAFKEnabled or not Humanoid then return end
     
     movementTimer = movementTimer + 1
     
-    if movementTimer >= 30 then
+    -- Only simulate movement every 300 cycles (much less frequent)
+    if movementTimer >= 300 then
         movementTimer = 0
         
-        if originalPosition == Vector3.new(0, 0, 0) then
-            originalPosition = RootPart.Position
+        -- Just send a small input to prevent AFK kick (no teleporting)
+        if Humanoid then
+            -- Simulate a tiny movement input without actually moving
+            Humanoid:Move(Vector3.new(0.001, 0, 0.001))
         end
-        
-        local randomOffset = Vector3.new(
-            math.random(-1, 1),
-            0,
-            math.random(-1, 1)
-        )
-        
-        local newPosition = originalPosition + randomOffset
-        RootPart.CFrame = CFrame.new(newPosition)
-        
-        task.wait(0.1)
-        RootPart.CFrame = CFrame.new(originalPosition)
     end
 end
 
