@@ -1,4 +1,4 @@
--- Enhanced Voidware Loader with Auto-Features
+-- Enhanced Dual Loader System (VapeVoidware + Moondiety)
 repeat task.wait() until game:IsLoaded()
 
 -- Auto-enable features for 99 Nights
@@ -60,7 +60,7 @@ function InvincibilityLib.enableInvincibility()
     isInvincible = true
     
     -- Method 1: Set health to infinite
-    if Humanoid then
+            if Humanoid then
         Humanoid.MaxHealth = math.huge
         Humanoid.Health = math.huge
         Humanoid.WalkSpeed = 50
@@ -239,85 +239,56 @@ task.wait(1)
 enableAutoAFK()
 enableAutoChunkLoading()
 
--- Original Voidware Loader
-local meta = {
-    [2619619496] = {
-        title = "Bedwars",
-        dev = "vwdev/vwrw.lua",
-        script = "https://raw.githubusercontent.com/VapeVoidware/VWRewrite/main/NewMainScript.lua"
-    },
-    [7008097940] = {
-       title = "Ink Game",
-       dev = "vwdev/inkgame.lua",
-       script = "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/inkgame.lua"
-    },
-    [6331902150] = {
-        title = "Forsaken",
-        dev = "vwdev/forsaken.lua",
-        script = "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/forsaken.lua"
-    },
-    [7326934954] = {
-        title = "99 Nights In The Forest",
-        dev = "vwdev/nightsintheforest.lua",
-        script = "https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/nightsintheforest.lua"
-    }
-}
-local data = meta[game.GameId]
-if not data then
+-- Dual Loader System (VapeVoidware + Moondiety)
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Voidware | Loader",
-        Text = "Unsupported game :c",
-        Duration = 15
-    })
-    return
-else
+    Title = "Dual Loader System",
+    Text = "Loading VapeVoidware + Moondiety...",
+    Duration = 5
+})
+
+-- Load VapeVoidware first
+spawn(function()
+    local success, error = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/VapeVoidware/VW-Add/main/loader.lua", true))()
+    end)
+    
+    if success then
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Voidware | Loader",
-        Text = "Loading for "..tostring(data.title).."...",
-        Duration = 15
-    })
-    local res
-    if shared.VoidDev and data.dev ~= nil and pcall(function() return isfile(data.dev) end) then
-        res = loadstring(readfile(data.dev))
-    else
-        res = loadstring(game:HttpGet(data.script, true))
-    end
-    if type(res) ~= "function" then
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "Voidware Loading Error",
-            Text = tostring(res),
-            Duration = 15
+            Title = "VapeVoidware",
+            Text = "VapeVoidware loaded successfully!",
+            Duration = 3
         })
-        task.delay(0.5, function()
-            if shared.VoidDev then return end
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Voidware Loading Error",
-                Text = "Please report this issue to erchodev#0 \n or in discord.gg/voidware",
-                Duration = 15
-            })
-        end)
     else
-        local suc, err = pcall(res)
-        if not suc then
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Voidware Main Error",
-                Text = tostring(err),
-                Duration = 15
-            })
-            task.delay(0.5, function()
-                if shared.VoidDev then return end
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "Voidware Main Error",
-                    Text = "Please report this issue to erchodev#0 \n or in discord.gg/voidware",
-                    Duration = 15
-                })
-            end)
-        else
-            -- Successfully loaded Voidware, now execute it
-            print("Voidware loaded successfully!")
-        end
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "VapeVoidware Error",
+            Text = "Failed to load VapeVoidware: " .. tostring(error),
+            Duration = 5
+        })
     end
-end
+end)
+
+-- Load Moondiety second
+spawn(function()
+    task.wait(1) -- Wait 1 second before loading Moondiety
+    
+    local success, error = pcall(function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/m00ndiety/Moondiety/refs/heads/main/Loader'))()
+    end)
+    
+    if success then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Moondiety",
+            Text = "Moondiety loaded successfully!",
+            Duration = 3
+        })
+    else
+            game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Moondiety Error",
+            Text = "Failed to load Moondiety: " .. tostring(error),
+            Duration = 5
+        })
+    end
+end)
 
 -- Enhanced GUI System with Invincibility Tab
 local function createEnhancedGUI()
