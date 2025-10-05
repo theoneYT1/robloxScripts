@@ -13,10 +13,8 @@ local Humanoid = Character:WaitForChild("Humanoid")
 local RootPart = Character:WaitForChild("HumanoidRootPart")
 
 -- Auto-enable variables
-local isInvincible = false
 local isAFKEnabled = false
 local isChunkLoadingEnabled = false
-local originalHealth = 100
 local originalPosition = Vector3.new(0, 0, 0)
 local movementTimer = 0
 local lastAFKUpdate = 0
@@ -27,111 +25,54 @@ local chunkSize = 2000
 local CHUNK_UPDATE_INTERVAL = 2
 local AFK_UPDATE_INTERVAL = 5
 
--- Auto-enable invincibility
+-- Auto-invincibility (always enabled)
+local isInvincible = true
+
+-- Auto-invincibility system (always active) - Standard loader approach
 local function enableAutoInvincibility()
-    isInvincible = true
-    
-    -- Method 1: Set health to a very high number (not math.huge) - ULTRA FAST
+    -- Standard invincibility method used in most loaders
     spawn(function()
         while isInvincible do
             if Humanoid then
-                Humanoid.MaxHealth = 999999
-                Humanoid.Health = 999999
-                Humanoid.WalkSpeed = 50
-                Humanoid.JumpPower = 100
+                Humanoid.MaxHealth = math.huge
+                Humanoid.Health = math.huge
             end
-            wait(0.01) -- Run 100 times per second instead of 10
+            wait()
         end
     end)
     
-    -- Additional ultra-fast health protection
+    -- Health change protection
     spawn(function()
         while isInvincible do
             if Humanoid then
-                Humanoid.Health = 999999
+                Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+                    if Humanoid.Health < Humanoid.MaxHealth then
+                        Humanoid.Health = Humanoid.MaxHealth
+                    end
+                end)
             end
-            wait(0.001) -- Run 1000 times per second
+            wait(0.1)
         end
     end)
     
-    -- Fast but stable health protection - 10,000 times per second
-    spawn(function()
-        while isInvincible do
-            if Humanoid then
-                Humanoid.Health = 999999
-                Humanoid.MaxHealth = 999999
-            end
-            wait(0.0001) -- Run 10,000 times per second - fast but stable
-        end
-    end)
-    
-    -- Additional fast protection - 5,000 times per second
-    spawn(function()
-        while isInvincible do
-            if Humanoid then
-                Humanoid.Health = 999999
-            end
-            wait(0.0002) -- Run 5,000 times per second
-        end
-    end)
-    
-    -- Method 2: Use BodyVelocity to prevent damage
-    spawn(function()
-        while isInvincible do
-            if RootPart then
-                local bodyVelocity = Instance.new("BodyVelocity")
-                bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-                bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-                bodyVelocity.Parent = RootPart
-                wait(0.1)
-                if bodyVelocity then
-                    bodyVelocity:Destroy()
+    -- Handle respawning
+    LocalPlayer.CharacterAdded:Connect(function(character)
+        local newHumanoid = character:WaitForChild("Humanoid")
+        spawn(function()
+            while isInvincible do
+                if newHumanoid then
+                    newHumanoid.MaxHealth = math.huge
+                    newHumanoid.Health = math.huge
                 end
+                wait()
             end
-            wait(0.1)
-        end
-    end)
-    
-    -- Method 3: Teleport to safe position when taking damage
-    local lastHealth = 999999
-    spawn(function()
-        while isInvincible do
-            if Humanoid and Humanoid.Health < lastHealth then
-                -- Teleport to safe position
-                local safePosition = RootPart.Position + Vector3.new(0, 10, 0)
-                RootPart.CFrame = CFrame.new(safePosition)
-                Humanoid.Health = 999999
-            end
-            lastHealth = Humanoid.Health
-            wait(0.1)
-        end
-    end)
-    
-    -- Method 4: Create invisible shield parts
-    spawn(function()
-        while isInvincible do
-            if Character then
-                local shield = Instance.new("Part")
-                shield.Name = "InvincibilityShield"
-                shield.Size = Vector3.new(10, 10, 10)
-                shield.Position = RootPart.Position
-                shield.Transparency = 1
-                shield.CanCollide = false
-                shield.Anchored = true
-                shield.Parent = Workspace
-                wait(0.1)
-                if shield then
-                    shield:Destroy()
-                end
-            end
-            wait(0.1)
-        end
+        end)
     end)
     
     -- Notify user
     game:GetService("StarterGui"):SetCore("SendNotification", {
         Title = "Invincibility",
-        Text = "God mode activated!",
+        Text = "God mode auto-activated!",
         Duration = 3
     })
 end
